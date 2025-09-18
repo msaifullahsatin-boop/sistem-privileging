@@ -1,0 +1,44 @@
+{% extends 'permohonan/base.html' %}
+
+{% block content %}
+    <h1 class="mb-4">Dashboard PIC Privileging</h1>
+    {% if jabatan_pic %}
+        <p class="lead">Memaparkan permohonan untuk: <strong>{{ jabatan_pic.nama }}</strong></p>
+    {% endif %}
+
+    <div class="card shadow-sm">
+        <div class="card-header fw-bold">
+            Senarai Permohonan Untuk Dipantau
+        </div>
+        <div class.card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nama Pemohon</th>
+                            <th>Tarikh Mohon</th>
+                            <th>Status Sokongan KJ</th>
+                            <th>Keputusan Jawatankuasa</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for permohonan in senarai_permohonan %}
+                            <tr>
+                                <td>{{ permohonan.nama_pemohon }}</td>
+                                <td>{{ permohonan.tarikh_borang_dihantar|date:"d M Y" }}</td>
+                                <td>
+                                    {% if permohonan.status_sokongan_kj == 'Menyokong' %}<span class="badge bg-success">{{ permohonan.get_status_sokongan_kj_display }}</span>{% elif permohonan.status_sokongan_kj == 'Tidak Menyokong' %}<span class="badge bg-danger">{{ permohonan.get_status_sokongan_kj_display }}</span>{% else %}<span class="badge bg-warning text-dark">{{ permohonan.get_status_sokongan_kj_display }}</span>{% endif %}
+                                </td>
+                                <td>
+                                    {% if permohonan.keputusan_jawatanankuasa == 'Ya' %}<span class="badge bg-success">{{ permohonan.get_keputusan_jawatanankuasa_display }}</span>{% elif permohonan.keputusan_jawatanankuasa == 'Tidak' %}<span class="badge bg-danger">{{ permohonan.get_keputusan_jawatanankuasa_display }}</span>{% else %}<span class="badge bg-warning text-dark">{{ permohonan.get_keputusan_jawatanankuasa_display }}</span>{% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="4" class="text-center">Tiada permohonan ditemui untuk jabatan anda.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

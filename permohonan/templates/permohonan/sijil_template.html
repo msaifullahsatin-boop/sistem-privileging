@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Sijil Privileging</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 2cm;
+        }
+        body {
+            font-family: 'Times New Roman', serif;
+            font-size: 12pt;
+        }
+        .container {
+            text-align: center;
+            border: 5px double black;
+            padding: 20px;
+            height: 23cm;
+        }
+        h1 {
+            font-size: 28pt;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        h2 {
+            font-size: 18pt;
+            margin-bottom: 40px;
+        }
+        .content {
+            text-align: center;
+            font-size: 14pt;
+            line-height: 1.5;
+        }
+        .footer {
+            position: running(footer);
+            text-align: left;
+            margin-top: 50px;
+        }
+        .signature {
+            margin-top: 80px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sijil Penganugerahan<br>Kebenaran Menjalankan Prosedur Klinikal</h1>
+        <h2>Dengan ini disahkan bahawa</h2>
+        
+        <div class="content">
+            <p style="font-size: 20pt; font-weight: bold;">{{ permohonan.nama_pemohon }}</p>
+            <p><strong>({{ permohonan.jawatan_gred.nama }})</strong></p>
+            <p>telah dianugerahkan kebenaran menjalankan prosedur klinikal<br>
+            di <strong>{{ permohonan.jabatan.nama }}, Hospital Wanita dan Kanak-Kanak Sabah</strong>.</p>
+            
+            <p><strong>No. Siri Sijil:</strong> {{ permohonan.no_siri_sijil }}</p>
+            <p><strong>Tarikh Dikeluarkan:</strong> {{ permohonan.tarikh_keputusan|date:"d F Y" }}</p>
+            <p><strong>Sah Sehingga:</strong> {{ permohonan.tarikh_sah_sehingga|date:"d F Y" }}</p>
+        </div>
+
+        <div class="signature">
+            <p>....................................................</p>
+            <p><strong>(Tandatangan Pengarah)</strong></p>
+            <p>Pengarah</p>
+            <p>Hospital Wanita dan Kanak-Kanak Sabah</p>
+        </div>
+    </div>
+</body>
+</html>

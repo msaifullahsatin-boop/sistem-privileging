@@ -1,0 +1,67 @@
+{% extends 'permohonan/base.html' %}
+
+{% block content %}
+    <h1 class="mb-4">Laporan Keseluruhan Permohonan</h1>
+
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <form method="GET" action="{% url 'laporan_permohonan' %}" class="row g-3 align-items-center">
+                <div class="col-auto">
+                    <label for="jabatan" class="form-label fw-bold">Tapis Mengikut Jabatan:</label>
+                </div>
+                <div class="col-auto">
+                    <select name="jabatan" id="jabatan" class="form-select">
+                        <option value="">Semua Jabatan</option>
+                        {% for j in senarai_jabatan %}
+                            <option value="{{ j.id }}" {% if j.id == jabatan_terpilih %}selected{% endif %}>{{ j.nama }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Tapis</button>
+                </div>
+                <div class="col-auto ms-auto">
+                    <a href="{% url 'laporan_export_excel' %}?jabatan={{ jabatan_terpilih|default:'' }}" class="btn btn-success">Eksport ke Excel</a>
+                </div>
+            </form>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nama Pemohon</th>
+                            <th>Jabatan</th>
+                            <th>Keputusan Jawatankuasa</th>
+                            <th>No. Sijil</th>
+                            <th>Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for permohonan in senarai_permohonan %}
+                            <tr>
+                                <td>{{ permohonan.nama_pemohon }}</td>
+                                <td>{{ permohonan.jabatan }}</td>
+                                <td>
+                                    {% if permohonan.keputusan_jawatanankuasa == 'Ya' %}<span class="badge bg-success">{{ permohonan.get_keputusan_jawatanankuasa_display }}</span>{% elif permohonan.keputusan_jawatanankuasa == 'Tidak' %}<span class="badge bg-danger">{{ permohonan.get_keputusan_jawatanankuasa_display }}</span>{% else %}<span class="badge bg-warning text-dark">{{ permohonan.get_keputusan_jawatanankuasa_display }}</span>{% endif %}
+                                </td>
+                                <td>{{ permohonan.no_siri_sijil|default:"-" }}</td>
+                                <td>
+                                    {% if permohonan.keputusan_jawatanankuasa == 'Ya' %}
+                                        <a href="{% url 'jana_sijil_pdf' pk=permohonan.pk %}" class="btn btn-info btn-sm" target="_blank">Lihat Sijil</a>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">Tiada permohonan ditemui.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

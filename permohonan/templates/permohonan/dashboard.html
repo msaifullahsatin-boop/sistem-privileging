@@ -1,0 +1,77 @@
+{% extends 'permohonan/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %} {# Pastikan 'static' dimuatkan di atas #}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-4">
+            <h3>Profil Anda</h3>
+            <hr>
+            <div class="card text-center">
+                
+                {% if user.userprofile.gambar_profil %}
+                    <img src="{{ user.userprofile.gambar_profil.url }}" class="card-img-top rounded-circle p-3" alt="Gambar Profil">
+                {% else %}
+                    <img src="{% static 'permohonan/images/default.jpg' %}" class="card-img-top rounded-circle p-3" alt="Gambar Profil Lalai">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ user.first_name }} {{ user.last_name }}</h5>
+                    <p class="card-text text-muted">{{ user.email }}</p>
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ profile_form|crispy }}
+                        <button type="submit" class="btn btn-secondary btn-sm mt-2">Kemas Kini Gambar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3>Permohonan Anda</h3>
+                <a href="{% url 'borang_permohonan' %}" class="btn btn-primary">Buat Permohonan Baru</a>
+            </div>
+            <hr>
+
+            {% if senarai_permohonan %}
+                {% for permohonan in senarai_permohonan %}
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Permohonan pada {{ permohonan.tarikh_borang_dihantar|date:"d M Y" }}</h5>
+                            <a href="{% url 'kemaskini_permohonan' pk=permohonan.pk %}" class="btn btn-secondary btn-sm">Kemas Kini</a>
+                        </div>
+                        <div class="card-body">
+                             <p class="card-text">
+                                <strong>Nama Penuh:</strong> {{ permohonan.nama_pemohon }} <br>
+                                <strong>No. K/P:</strong> {{ permohonan.no_kp }} <br>
+                                <strong>Jawatan/Gred:</strong> {{ permohonan.jawatan_gred }} <br>
+                                <strong>Jabatan:</strong> {{ permohonan.jabatan }}
+                            </p>
+                            <hr>
+                            <p class="card-text">
+                                <strong>Status Sokongan KJ:</strong> 
+                                {% if permohonan.status_sokongan_kj == 'Menyokong' %}<span class="badge bg-success">{{ permohonan.get_status_sokongan_kj_display }}</span>{% elif permohonan.status_sokongan_kj == 'Tidak Menyokong' %}<span class="badge bg-danger">{{ permohonan.get_status_sokongan_kj_display }}</span>{% else %}<span class="badge bg-warning text-dark">{{ permohonan.get_status_sokongan_kj_display }}</span>{% endif %}
+                                <br>
+                                <strong>Keputusan Jawatankuasa:</strong> 
+                                {% if permohonan.keputusan_jawatanankuasa == 'Ya' %}<span class="badge bg-success">{{ permohonan.get_keputusan_jawatanankuasa_display }}</span>{% elif permohonan.keputusan_jawatanankuasa == 'Tidak' %}<span class="badge bg-danger">{{ permohonan.get_keputusan_jawatanankuasa_display }}</span>{% else %}<span class="badge bg-warning text-dark">{{ permohonan.get_keputusan_jawatanankuasa_display }}</span>{% endif %}
+                            </p>
+                            {% if permohonan.keputusan_jawatanankuasa == 'Ya' and permohonan.tarikh_sah_sehingga %}
+                                <div class="alert alert-success">
+                                    <h5 class="alert-heading">Permohonan Diluluskan!</h5>
+                                    <p><strong>Privileging Sah Sehingga: {{ permohonan.tarikh_sah_sehingga|date:"d M Y" }}</strong></p>
+                                    <hr>
+                                    <a href="{% url 'jana_sijil_pdf' pk=permohonan.pk %}" class="btn btn-primary">Muat Turun Sijil PDF</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">
+                    <p class="mb-0">Anda belum membuat sebarang permohonan.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'permohonan/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <h1>Borang Permohonan Privileging</h1>
+    <hr>
+    <form method="post" enctype="multipart/form-data" class="mb-5">
+        {% csrf_token %}
+        
+        <div class="card mb-4">
+            <div class="card-header fw-bold">BAHAGIAN I (MAKLUMAT PEMOHON)</div>
+            <div class="card-body">
+                {{ form_utama|crispy }}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header fw-bold">BAHAGIAN II KELAYAKAN (Ijazah, Master dll.)</div>
+            <div class="card-body">
+                <div id="kelayakan-form-list">
+                    {{ kelayakan_formset.management_form }}
+                    {% for form in kelayakan_formset %}
+                        <div class="kelayakan-form border-bottom pb-3 mb-3">
+                            {{ form|crispy }}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div id="empty-kelayakan-form" class="d-none">
+                    <div class="kelayakan-form border-bottom pb-3 mb-3">
+                         {{ kelayakan_formset.empty_form|crispy }}
+                    </div>
+                </div>
+                <button type="button" id="add-kelayakan-button" class="btn btn-success btn-sm mt-2">Tambah Kelayakan</button>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header fw-bold">BAHAGIAN III SENARAI PROSEDUR YANG DIPOHON</div>
+            <div class="card-body">
+                <div id="prosedur-form-list">
+                    {{ prosedur_formset.management_form }}
+                    {% for form in prosedur_formset %}
+                        <div class="prosedur-form border-bottom pb-3 mb-3">
+                            {{ form|crispy }}
+                        </div>
+                    {% endfor %}
+                </div>
+                 <div id="empty-prosedur-form" class="d-none">
+                    <div class="prosedur-form border-bottom pb-3 mb-3">
+                         {{ prosedur_formset.empty_form|crispy }}
+                    </div>
+                </div>
+                <button type="button" id="add-prosedur-button" class="btn btn-success btn-sm mt-2">Tambah Prosedur</button>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-lg">Hantar Permohonan</button>
+    </form>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'permohonan/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <h1 class="mb-4">Sokongan Permohonan Privileging</h1>
+    <p class="lead">Sila semak butiran pemohon di bawah dan berikan ulasan anda.</p>
+
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header fw-bold">
+                    Butiran Pemohon
+                </div>
+                <div class="card-body">
+                    <p><strong>Nama:</strong> {{ permohonan.nama_pemohon }}</p>
+                    <p><strong>Jabatan:</strong> {{ permohonan.jabatan }}</p>
+                    <p><strong>Jawatan/Gred:</strong> {{ permohonan.jawatan_gred }}</p>
+                    <p><strong>Tarikh Mohon:</strong> {{ permohonan.tarikh_borang_dihantar|date:"d M Y" }}</p>
+
+                    <h6 class="mt-4">Kelayakan:</h6>
+                    <ul class="list-group list-group-flush mb-3">
+                        {% for kelayakan in permohonan.kelayakan.all %}
+                            <li class="list-group-item">{{ kelayakan.nama_kelayakan }} - {{ kelayakan.universiti }} ({{ kelayakan.tahun_lulus }})</li>
+                        {% empty %}
+                            <li class="list-group-item text-muted">Tiada kelayakan disenaraikan.</li>
+                        {% endfor %}
+                    </ul>
+
+                    <h6 class="mt-4">Prosedur Dipohon:</h6>
+                     <ul class="list-group list-group-flush">
+                        {% for prosedur in permohonan.prosedur.all %}
+                            <li class="list-group-item">{{ prosedur.nama_prosedur }} ({{ prosedur.get_jenis_prosedur_display }})</li>
+                        {% empty %}
+                             <li class="list-group-item text-muted">Tiada prosedur dipohon.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header fw-bold bg-warning text-dark">
+                    Untuk Diisi oleh Ketua Jabatan
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form_sokongan|crispy }}
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary mt-3">Hantar Pengesahan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
