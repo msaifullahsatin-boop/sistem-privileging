@@ -10,8 +10,11 @@ from django.http import HttpResponse
 import pandas as pd
 from .utils import render_to_pdf 
 
-from .models import Permohonan, Kelayakan, ProsedurDimohon, UserProfile, SiteSettings, Jabatan, Gred
-from .forms import BorangPermohonan, BorangSokonganKJ, BorangKeputusanJK, UserProfileForm
+from .models import (
+    Permohonan, Kelayakan, UserProfile, SiteSettings, Jabatan, Gred, Jawatan,
+    ProsedurPilihan, CoreProcedure, SpecialisedProcedure, AdditionProcedure, ReductionProcedure
+)
+from .forms import BorangPermohonan, BorangSokonganKJ, BorangKeputusanJK, UserProfileForm, KelayakanForm
 
 
 def custom_login_view(request, *args, **kwargs):
@@ -118,30 +121,44 @@ def laporan_permohonan(request):
 @login_required
 def papar_borang(request):
     YEAR_CHOICES = [(r,r) for r in range(date.today().year, date.today().year - 50, -1)]
-    KelayakanFormSet = inlineformset_factory(Permohonan, Kelayakan, fields=('nama_kelayakan', 'universiti', 'tahun_lulus', 'salinan_sijil'), extra=2, widgets={'tahun_lulus': forms.Select(choices=YEAR_CHOICES)}, min_num=0)
-    ProsedurFormSet = inlineformset_factory(Permohonan, ProsedurDimohon, fields=('nama_prosedur', 'jenis_prosedur'), extra=4, min_num=1, validate_min=True)
-    
+    KelayakanFormSet = inlineformset_factory(Permohonan, Kelayakan, form=KelayakanForm, extra=1, widgets={'tahun_lulus': forms.Select(choices=YEAR_CHOICES)})
+    CoreProcedureFormSet = inlineformset_factory(Permohonan, CoreProcedure, fields=['prosedur'], extra=1, min_num=0)
+    SpecialisedProcedureFormSet = inlineformset_factory(Permohonan, SpecialisedProcedure, fields=['prosedur'], extra=1, min_num=0)
+    AdditionProcedureFormSet = inlineformset_factory(Permohonan, AdditionProcedure, fields=['prosedur', 'jenis'], extra=1, min_num=0)
+    ReductionProcedureFormSet = inlineformset_factory(Permohonan, ReductionProcedure, fields=['nama_prosedur'], extra=1, min_num=0)
+
     if request.method == 'POST':
         form_utama = BorangPermohonan(request.POST, request.FILES)
         kelayakan_formset = KelayakanFormSet(request.POST, request.FILES, prefix='kelayakan')
-        prosedur_formset = ProsedurFormSet(request.POST, prefix='prosedur')
-        if form_utama.is_valid() and kelayakan_formset.is_valid() and prosedur_formset.is_valid():
+        core_formset = CoreProcedureFormSet(request.POST, prefix='core')
+        specialised_formset = SpecialisedProcedureFormSet(request.POST, prefix='specialised')
+        addition_formset = AdditionProcedureFormSet(request.POST, prefix='addition')
+        reduction_formset = ReductionProcedureFormSet(request.POST, prefix='reduction')
+        formsets = [kelayakan_formset, core_formset, specialised_formset, addition_formset, reduction_formset]
+        
+        if form_utama.is_valid() and all(fs.is_valid() for fs in formsets):
             permohonan_baru = form_utama.save(commit=False)
             permohonan_baru.pemohon = request.user
             permohonan_baru.save()
-            kelayakan_formset.instance = permohonan_baru
-            kelayakan_formset.save()
-            prosedur_formset.instance = permohonan_baru
-            prosedur_formset.save()
+            for fs in formsets:
+                fs.instance = permohonan_baru
+                fs.save()
             return redirect('dashboard')
     else:
         form_utama = BorangPermohonan()
         kelayakan_formset = KelayakanFormSet(prefix='kelayakan')
-        prosedur_formset = ProsedurFormSet(prefix='prosedur')
+        core_formset = CoreProcedureFormSet(prefix='core')
+        specialised_formset = SpecialisedProcedureFormSet(prefix='specialised')
+        addition_formset = AdditionProcedureFormSet(prefix='addition')
+        reduction_formset = ReductionProcedureFormSet(prefix='reduction')
+        
     context = {
         'form_utama': form_utama,
         'kelayakan_formset': kelayakan_formset,
-        'prosedur_formset': prosedur_formset,
+        'core_formset': core_formset,
+        'specialised_formset': specialised_formset,
+        'addition_formset': addition_formset,
+        'reduction_formset': reduction_formset,
     }
     return render(request, 'permohonan/borang.html', context)
 
@@ -150,27 +167,43 @@ def kemaskini_permohonan(request, pk):
     permohonan = get_object_or_404(Permohonan, pk=pk)
     if permohonan.pemohon != request.user:
         return redirect('dashboard')
+    
     YEAR_CHOICES = [(r,r) for r in range(date.today().year, date.today().year - 50, -1)]
-    KelayakanFormSet = inlineformset_factory(Permohonan, Kelayakan, fields=('nama_kelayakan', 'universiti', 'tahun_lulus', 'salinan_sijil'), extra=1, widgets={'tahun_lulus': forms.Select(choices=YEAR_CHOICES)}, can_delete=True, min_num=0)
-    ProsedurFormSet = inlineformset_factory(Permohonan, ProsedurDimohon, fields=('nama_prosedur', 'jenis_prosedur'), extra=1, can_delete=True, min_num=0)
+    KelayakanFormSet = inlineformset_factory(Permohonan, Kelayakan, form=KelayakanForm, extra=1, widgets={'tahun_lulus': forms.Select(choices=YEAR_CHOICES)}, can_delete=True)
+    CoreProcedureFormSet = inlineformset_factory(Permohonan, CoreProcedure, fields=['prosedur'], extra=1, min_num=0, can_delete=True)
+    SpecialisedProcedureFormSet = inlineformset_factory(Permohonan, SpecialisedProcedure, fields=['prosedur'], extra=1, min_num=0, can_delete=True)
+    AdditionProcedureFormSet = inlineformset_factory(Permohonan, AdditionProcedure, fields=['prosedur', 'jenis'], extra=1, min_num=0, can_delete=True)
+    ReductionProcedureFormSet = inlineformset_factory(Permohonan, ReductionProcedure, fields=['nama_prosedur'], extra=1, min_num=0, can_delete=True)
     
     if request.method == 'POST':
         form_utama = BorangPermohonan(request.POST, request.FILES, instance=permohonan)
         kelayakan_formset = KelayakanFormSet(request.POST, request.FILES, instance=permohonan, prefix='kelayakan')
-        prosedur_formset = ProsedurFormSet(request.POST, instance=permohonan, prefix='prosedur')
-        if form_utama.is_valid() and kelayakan_formset.is_valid() and prosedur_formset.is_valid():
+        core_formset = CoreProcedureFormSet(request.POST, instance=permohonan, prefix='core')
+        specialised_formset = SpecialisedProcedureFormSet(request.POST, instance=permohonan, prefix='specialised')
+        addition_formset = AdditionProcedureFormSet(request.POST, instance=permohonan, prefix='addition')
+        reduction_formset = ReductionProcedureFormSet(request.POST, instance=permohonan, prefix='reduction')
+        formsets = [kelayakan_formset, core_formset, specialised_formset, addition_formset, reduction_formset]
+
+        if form_utama.is_valid() and all(fs.is_valid() for fs in formsets):
             form_utama.save()
-            kelayakan_formset.save()
-            prosedur_formset.save()
+            for fs in formsets:
+                fs.save()
             return redirect('dashboard')
     else:
         form_utama = BorangPermohonan(instance=permohonan)
         kelayakan_formset = KelayakanFormSet(instance=permohonan, prefix='kelayakan')
-        prosedur_formset = ProsedurFormSet(instance=permohonan, prefix='prosedur')
+        core_formset = CoreProcedureFormSet(instance=permohonan, prefix='core')
+        specialised_formset = SpecialisedProcedureFormSet(instance=permohonan, prefix='specialised')
+        addition_formset = AdditionProcedureFormSet(instance=permohonan, prefix='addition')
+        reduction_formset = ReductionProcedureFormSet(instance=permohonan, prefix='reduction')
+        
     context = {
         'form_utama': form_utama,
         'kelayakan_formset': kelayakan_formset,
-        'prosedur_formset': prosedur_formset,
+        'core_formset': core_formset,
+        'specialised_formset': specialised_formset,
+        'addition_formset': addition_formset,
+        'reduction_formset': reduction_formset,
     }
     return render(request, 'permohonan/borang.html', context)
 
@@ -270,8 +303,11 @@ def laporan_export_excel(request):
         permohonan_list = permohonan_list.filter(jabatan__id=jabatan_filter_id)
     data_rows = []
     for permohonan in permohonan_list:
-        prosedur_texts = [f"- {p.nama_prosedur.nama} ({p.get_jenis_prosedur_display()})" for p in permohonan.prosedur.all()]
-        senarai_prosedur = "\n".join(prosedur_texts)
+        core_procs = [f"- {p.prosedur.nama} (Core)" for p in permohonan.core_procedures.all()]
+        spec_procs = [f"- {p.prosedur.nama} (Specialised)" for p in permohonan.specialised_procedures.all()]
+        add_procs = [f"- {p.prosedur.nama} (Addition - {p.get_jenis_display()})" for p in permohonan.addition_procedures.all()]
+        red_procs = [f"- {p.nama_prosedur} (Reduction)" for p in permohonan.reduction_procedures.all()]
+        senarai_prosedur = "\n".join(core_procs + spec_procs + add_procs + red_procs)
         data_rows.append({
             'Nama Pemohon': permohonan.nama_pemohon, 'No. K/P': permohonan.no_kp,
             'Jawatan': permohonan.jawatan.nama if permohonan.jawatan else '',
@@ -288,19 +324,5 @@ def laporan_export_excel(request):
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',)
     filename = "laporan_privileging_ditapis.xlsx" if jabatan_filter_id else "laporan_privileging_semua.xlsx"
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    df.to_excel(response, index=False)
-    return response
-
-@login_required
-def export_excel(request):
-    # FUNGSI INI KINI DIGANTIKAN DENGAN laporan_export_excel YANG LEBIH BAIK
-    # Anda boleh memadamnya jika mahu, tetapi pastikan URL juga dipadam.
-    if not request.user.groups.filter(name='Jawatankuasa').exists():
-        return redirect('dashboard')
-    queryset = Permohonan.objects.all().values('nama_pemohon', 'no_kp', 'jawatan__nama', 'gred__nama', 'jabatan__nama', 'tarikh_borang_dihantar', 'status_sokongan_kj', 'ulasan_kj','nama_kj', 'tarikh_sokongan_kj', 'keputusan_jawatanankuasa', 'tarikh_keputusan', 'tarikh_sah_sehingga')
-    df = pd.DataFrame(list(queryset))
-    df.rename(columns={'jawatan__nama': 'Jawatan', 'gred__nama': 'Gred', 'jabatan__nama': 'Jabatan','tarikh_borang_dihantar': 'Tarikh Mohon','status_sokongan_kj': 'Status Sokongan KJ','ulasan_kj': 'Ulasan KJ','nama_kj': 'Nama KJ','tarikh_sokongan_kj': 'Tarikh Sokongan KJ','keputusan_jawatanankuasa': 'Keputusan Jawatankuasa','tarikh_keputusan': 'Tarikh Keputusan','tarikh_sah_sehingga': 'Sah Sehingga'}, inplace=True)
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',)
-    response['Content-Disposition'] = 'attachment; filename="laporan_privileging.xlsx"'
     df.to_excel(response, index=False)
     return response
