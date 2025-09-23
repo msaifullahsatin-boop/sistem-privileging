@@ -3,7 +3,6 @@ from django.forms import inlineformset_factory
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LoginView
-from django.urls import reverse_lazy
 from django import forms
 from datetime import date
 from django.http import HttpResponse

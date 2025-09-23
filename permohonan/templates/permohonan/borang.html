@@ -16,21 +16,15 @@
 
         <div class="card mb-4">
             <div class="card-header fw-bold">BAHAGIAN II: KELAYAKAN (Ijazah, Master dll.)</div>
-            <div class="card-body" id="kelayakan-form-container">
-                <div id="kelayakan-form-list">
+            <div class="card-body">
+                <div id="kelayakan-formset">
                     {{ kelayakan_formset.management_form }}
                     {% for form in kelayakan_formset %}
-                        <div class="kelayakan-form dynamic-form border-bottom pb-3 mb-3">
+                        <div class="dynamic-form border-bottom pb-3 mb-3">
                             {{ form|crispy }}
                         </div>
                     {% endfor %}
                 </div>
-                <div id="empty-kelayakan-form" class="d-none">
-                    <div class="kelayakan-form dynamic-form border-bottom pb-3 mb-3">
-                         {{ kelayakan_formset.empty_form|crispy }}
-                    </div>
-                </div>
-                <button type="button" id="add-kelayakan-button" class="btn btn-success btn-sm mt-2">Tambah Kelayakan</button>
             </div>
         </div>
 
@@ -38,41 +32,33 @@
             <div class="card-header fw-bold">BAHAGIAN III: SENARAI PROSEDUR YANG DIPOHON</div>
             <div class="card-body">
                 <h5 class="mt-3">Core Procedures</h5>
-                <div id="core-form-list">
+                <div id="core-formset">
                     {{ core_formset.management_form }}
-                    {% for form in core_formset %}<div class="core-form dynamic-form">{{ form|crispy }}</div>{% endfor %}
+                    {% for form in core_formset %}<div class="dynamic-form">{{ form|crispy }}</div>{% endfor %}
                 </div>
-                <div id="empty-core-form" class="d-none"><div class="core-form dynamic-form">{{ core_formset.empty_form|crispy }}</div></div>
-                <button type="button" id="add-core-button" class="btn btn-success btn-sm mt-2">Tambah Core Procedure</button>
                 <hr>
 
                 <h5 class="mt-4">Specialised Procedures</h5>
-                <div id="specialised-form-list">
+                <div id="specialised-formset">
                     {{ specialised_formset.management_form }}
-                    {% for form in specialised_formset %}<div class="specialised-form dynamic-form">{{ form|crispy }}</div>{% endfor %}
+                    {% for form in specialised_formset %}<div class="dynamic-form">{{ form|crispy }}</div>{% endfor %}
                 </div>
-                <div id="empty-specialised-form" class="d-none"><div class="specialised-form dynamic-form">{{ specialised_formset.empty_form|crispy }}</div></div>
-                <button type="button" id="add-specialised-button" class="btn btn-success btn-sm mt-2">Tambah Specialised Procedure</button>
                 <hr>
                 
                 <h5 class="mt-4">Addition Procedures</h5>
                 <p class="text-muted small">Abaikan jika tidak berkaitan.</p>
-                <div id="addition-form-list">
+                <div id="addition-formset">
                     {{ addition_formset.management_form }}
-                    {% for form in addition_formset %}<div class="addition-form dynamic-form">{{ form|crispy }}</div>{% endfor %}
+                    {% for form in addition_formset %}<div class="dynamic-form">{{ form|crispy }}</div>{% endfor %}
                 </div>
-                <div id="empty-addition-form" class="d-none"><div class="addition-form dynamic-form">{{ addition_formset.empty_form|crispy }}</div></div>
-                <button type="button" id="add-addition-button" class="btn btn-success btn-sm mt-2">Tambah Addition Procedure</button>
                 <hr>
                 
                 <h5 class="mt-4">Reduction Procedures</h5>
                 <p class="text-muted small">Abaikan jika tidak berkaitan.</p>
-                <div id="reduction-form-list">
+                <div id="reduction-formset">
                     {{ reduction_formset.management_form }}
-                    {% for form in reduction_formset %}<div class="reduction-form dynamic-form">{{ form|crispy }}</div>{% endfor %}
+                    {% for form in reduction_formset %}<div class="dynamic-form">{{ form|crispy }}</div>{% endfor %}
                 </div>
-                <div id="empty-reduction-form" class="d-none"><div class="reduction-form dynamic-form">{{ reduction_formset.empty_form|crispy }}</div></div>
-                <button type="button" id="add-reduction-button" class="btn btn-success btn-sm mt-2">Tambah Reduction Procedure</button>
             </div>
         </div>
         
@@ -84,21 +70,23 @@
 {% block extra_js %}
 <script type="text/javascript">
 $(document).ready(function() {
-    // Fungsi umum untuk menguruskan formset
-    function setupFormset(listId, emptyFormId, addButtonId, prefix, formClass) {
-        $(addButtonId).click(function() {
-            var formIdx = $('#id_' + prefix + '-TOTAL_FORMS').val();
-            var newForm = $(emptyFormId).html().replace(/__prefix__/g, formIdx);
-            $(listId).append(newForm);
-            $('#id_' + prefix + '-TOTAL_FORMS').val(parseInt(formIdx) + 1);
+    // Fungsi plugin formset
+    function initializeFormset(selector, prefix, addText) {
+        $(selector).formset({
+            prefix: prefix,
+            addText: addText,
+            deleteText: 'Buang',
+            addCssClass: 'btn btn-success btn-sm mt-2 add-row',
+            deleteCssClass: 'btn btn-danger btn-sm mt-2 delete-row'
         });
     }
 
-    setupFormset('#kelayakan-form-list', '#empty-kelayakan-form', '#add-kelayakan-button', '{{ kelayakan_formset.prefix }}');
-    setupFormset('#core-form-list', '#empty-core-form', '#add-core-button', '{{ core_formset.prefix }}');
-    setupFormset('#specialised-form-list', '#empty-specialised-form', '#add-specialised-button', '{{ specialised_formset.prefix }}');
-    setupFormset('#addition-form-list', '#empty-addition-form', '#add-addition-button', '{{ addition_formset.prefix }}');
-    setupFormset('#reduction-form-list', '#empty-reduction-form', '#add-reduction-button', '{{ reduction_formset.prefix }}');
+    // Laksanakan untuk setiap formset
+    initializeFormset('#kelayakan-formset .dynamic-form', '{{ kelayakan_formset.prefix }}', 'Tambah Kelayakan');
+    initializeFormset('#core-formset .dynamic-form', '{{ core_formset.prefix }}', 'Tambah Core Procedure');
+    initializeFormset('#specialised-formset .dynamic-form', '{{ specialised_formset.prefix }}', 'Tambah Specialised Procedure');
+    initializeFormset('#addition-formset .dynamic-form', '{{ addition_formset.prefix }}', 'Tambah Addition Procedure');
+    initializeFormset('#reduction-formset .dynamic-form', '{{ reduction_formset.prefix }}', 'Tambah Reduction Procedure');
     
     // Skrip untuk Kategori Bersarang
     const kategoriUtama = $('#id_kategori_utama');
