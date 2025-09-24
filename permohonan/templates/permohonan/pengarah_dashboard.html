@@ -3,17 +3,17 @@
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="mb-0">Dashboard Jawatankuasa</h1>
+            <h1 class="mb-0">Dashboard Pengarah</h1>
             <p class="lead mb-0">Memaparkan permohonan yang telah disokong oleh Ketua Jabatan.</p>
         </div>
         <div>
-            <a href="{% url 'export_excel' %}" class="btn btn-success">Eksport Laporan ke Excel</a>
+            <a href="{% url 'laporan_export_excel' %}" class="btn btn-success">Eksport Laporan ke Excel</a>
         </div>
     </div>
 
     <div class="card shadow-sm">
         <div class="card-header fw-bold">
-            Senarai Permohonan Untuk Dinilai
+            Senarai Permohonan Untuk Keputusan Akhir
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -23,7 +23,7 @@
                             <th>Nama Pemohon</th>
                             <th>Jabatan</th>
                             <th>Tarikh Mohon</th>
-                            <th>Status Sokongan KJ</th>
+                            <th>Status Sokongan Ketua Jabatan</th>
                             <th>Tindakan</th>
                         </tr>
                     </thead>
@@ -35,13 +35,11 @@
                                 <td>{{ permohonan.tarikh_borang_dihantar|date:"d M Y" }}</td>
                                 <td><span class="badge bg-success">{{ permohonan.get_status_sokongan_kj_display }}</span></td>
                                 <td>
-                                    <a href="{% url 'keputusan_jawatankuasa' pk=permohonan.pk %}" class="btn btn-primary btn-sm">Lihat / Buat Keputusan</a>
+                                    <a href="{% url 'keputusan_pengarah' pk=permohonan.pk %}" class="btn btn-primary btn-sm">Lihat / Buat Keputusan</a>
                                 </td>
                             </tr>
                         {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center">Tiada permohonan yang sedia untuk dinilai.</td>
-                            </tr>
+                            <tr><td colspan="5" class="text-center">Tiada permohonan yang sedia untuk dinilai.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>

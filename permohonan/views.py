@@ -13,7 +13,7 @@ from .models import (
     Permohonan, Kelayakan, UserProfile, SiteSettings, Jabatan, Gred, Jawatan,
     ProsedurPilihan, CoreProcedure, SpecialisedProcedure, AdditionProcedure, ReductionProcedure
 )
-from .forms import BorangPermohonan, BorangSokonganKJ, BorangKeputusanJK, UserProfileForm, KelayakanForm
+from .forms import BorangPermohonan, BorangSokonganKetuaJabatan, BorangKeputusanPengarah, UserProfileForm, KelayakanForm
 
 
 def custom_login_view(request, *args, **kwargs):
@@ -29,8 +29,8 @@ def custom_login_view(request, *args, **kwargs):
 
 def index(request):
     if request.user.is_authenticated:
-        if request.user.is_superuser or request.user.groups.filter(name='Jawatankuasa').exists():
-            return redirect('jawatankuasa_dashboard')
+        if request.user.is_superuser or request.user.groups.filter(name='Pengarah').exists():
+            return redirect('pengarah_dashboard')
         elif request.user.groups.filter(name='KetuaJabatan').exists():
             return redirect('hod_dashboard')
         elif request.user.groups.filter(name='PICPrivileging').exists():
@@ -94,17 +94,17 @@ def hod_dashboard(request):
     return render(request, 'permohonan/hod_dashboard.html', context)
 
 @login_required
-def jawatankuasa_dashboard(request):
-    if not request.user.groups.filter(name='Jawatankuasa').exists():
+def pengarah_dashboard(request):
+    if not (request.user.is_superuser or request.user.groups.filter(name='Pengarah').exists()):
         return redirect('dashboard')
     senarai_permohonan_sedia = Permohonan.objects.filter(status_sokongan_kj='Menyokong').order_by('-tarikh_borang_dihantar')
     context = { 'senarai_permohonan_sedia': senarai_permohonan_sedia }
-    return render(request, 'permohonan/jawatankuasa_dashboard.html', context)
+    return render(request, 'permohonan/pengarah_dashboard.html', context)
 
 @login_required
 def laporan_permohonan(request):
     user = request.user
-    if not (user.is_superuser or user.groups.filter(name__in=['Jawatankuasa', 'PICPrivileging']).exists()):
+    if not (user.is_superuser or user.groups.filter(name__in=['Pengarah', 'PICPrivileging']).exists()):
         return redirect('dashboard')
     permohonan_list = Permohonan.objects.all().order_by('-tarikh_borang_dihantar')
     jabatan_filter_id = request.GET.get('jabatan')
@@ -217,7 +217,7 @@ def sokong_permohonan(request, pk):
     except UserProfile.DoesNotExist:
         return redirect('hod_dashboard')
     if request.method == 'POST':
-        form_sokongan = BorangSokonganKJ(request.POST, instance=permohonan)
+        form_sokongan = BorangSokonganKetuaJabatan(request.POST, instance=permohonan)
         if form_sokongan.is_valid():
             permohonan_disokong = form_sokongan.save(commit=False)
             permohonan_disokong.nama_kj = request.user.get_full_name() or request.user.username
@@ -226,17 +226,17 @@ def sokong_permohonan(request, pk):
             permohonan_disokong.save()
             return redirect('hod_dashboard')
     else:
-        form_sokongan = BorangSokonganKJ(instance=permohonan)
+        form_sokongan = BorangSokonganKetuaJabatan(instance=permohonan)
     context = {'permohonan': permohonan, 'form_sokongan': form_sokongan}
     return render(request, 'permohonan/sokong_permohonan.html', context)
 
 @login_required
-def keputusan_jawatankuasa(request, pk):
-    if not request.user.groups.filter(name='Jawatankuasa').exists():
+def keputusan_pengarah(request, pk):
+    if not (request.user.is_superuser or request.user.groups.filter(name='Pengarah').exists()):
         return redirect('dashboard')
     permohonan = get_object_or_404(Permohonan, pk=pk)
     if request.method == 'POST':
-        form_keputusan = BorangKeputusanJK(request.POST, instance=permohonan)
+        form_keputusan = BorangKeputusanPengarah(request.POST, instance=permohonan)
         if form_keputusan.is_valid():
             keputusan_final = form_keputusan.save(commit=False)
             keputusan_final.tarikh_keputusan = date.today()
@@ -251,11 +251,11 @@ def keputusan_jawatankuasa(request, pk):
                 keputusan_final.tarikh_sah_sehingga = None
                 keputusan_final.no_siri_sijil = None
             keputusan_final.save()
-            return redirect('jawatankuasa_dashboard')
+            return redirect('pengarah_dashboard')
     else:
-        form_keputusan = BorangKeputusanJK(instance=permohonan)
+        form_keputusan = BorangKeputusanPengarah(instance=permohonan)
     context = {'permohonan': permohonan, 'form_keputusan': form_keputusan}
-    return render(request, 'permohonan/keputusan_jawatankuasa.html', context)
+    return render(request, 'permohonan/keputusan_pengarah.html', context)
 
 def daftar(request):
     if request.method == 'POST':
@@ -276,7 +276,7 @@ def jana_sijil_pdf(request, pk):
     permohonan = get_object_or_404(Permohonan, pk=pk)
     user = request.user
     is_owner = (user == permohonan.pemohon)
-    is_admin_role = user.is_superuser or user.groups.filter(name__in=['Jawatankuasa', 'PICPrivileging', 'KetuaJabatan']).exists()
+    is_admin_role = user.is_superuser or user.groups.filter(name__in=['Pengarah', 'PICPrivileging', 'KetuaJabatan']).exists()
     
     if (not is_owner and not is_admin_role) or permohonan.keputusan_jawatanankuasa != 'Ya':
         return redirect('dashboard')
@@ -294,7 +294,7 @@ def jana_sijil_pdf(request, pk):
 @login_required
 def laporan_export_excel(request):
     user = request.user
-    if not (user.is_superuser or user.groups.filter(name__in=['Jawatankuasa', 'PICPrivileging']).exists()):
+    if not (user.is_superuser or user.groups.filter(name__in=['Pengarah', 'PICPrivileging']).exists()):
         return redirect('dashboard')
     permohonan_list = Permohonan.objects.all()
     jabatan_filter_id = request.GET.get('jabatan')
@@ -313,8 +313,8 @@ def laporan_export_excel(request):
             'Gred': permohonan.gred.nama if permohonan.gred else '',
             'Jabatan': permohonan.jabatan.nama if permohonan.jabatan else '',
             'Tarikh Mohon': permohonan.tarikh_borang_dihantar,
-            'Status Sokongan KJ': permohonan.get_status_sokongan_kj_display(),
-            'Keputusan Jawatankuasa': permohonan.get_keputusan_jawatanankuasa_display(),
+            'Status Sokongan Ketua Jabatan': permohonan.get_status_sokongan_kj_display(),
+            'Keputusan Pengarah': permohonan.get_keputusan_jawatanankuasa_display(),
             'Sah Sehingga': permohonan.tarikh_sah_sehingga,
             'No Siri Sijil': permohonan.no_siri_sijil,
             'Senarai Prosedur Dipohon': senarai_prosedur,

@@ -58,12 +58,16 @@ class Permohonan(models.Model):
     kategori_bawahan = models.CharField("Sub-Kategori Pemohon", max_length=100, choices=KATEGORI_BAWAHAN_CHOICES, blank=True, null=True)
     jawatan_lain = models.CharField("Jawatan Lain-lain (jika berkenaan)", max_length=100, blank=True, null=True)
     tarikh_borang_dihantar = models.DateField(auto_now_add=True)
+    
+    # --- LABEL TELAH DIKEMAS KINI DI SINI ---
     status_sokongan_kj = models.CharField("Status Sokongan Ketua Jabatan", max_length=20, choices=SOKONGAN_CHOICES, default='Menunggu')
     ulasan_kj = models.TextField("Ulasan Ketua Jabatan", blank=True, null=True)
     nama_kj = models.CharField("Nama Ketua Jabatan", max_length=255, blank=True, null=True)
     jawatan_kj = models.CharField("Jawatan Ketua Jabatan", max_length=100, blank=True, null=True)
     tarikh_sokongan_kj = models.DateField("Tarikh Sokongan Ketua Jabatan", blank=True, null=True)
-    keputusan_jawatanankuasa = models.CharField(max_length=20, choices=KELULUSAN_CHOICES, default='Menunggu')
+    # ------------------------------------
+
+    keputusan_jawatanankuasa = models.CharField("Keputusan Pengarah", max_length=20, choices=KELULUSAN_CHOICES, default='Menunggu')
     tarikh_keputusan = models.DateField("Tarikh Keputusan", blank=True, null=True)
     tarikh_sah_sehingga = models.DateField("Tarikh Sah Sehingga", blank=True, null=True)
     no_siri_sijil = models.CharField("No Siri Sijil", max_length=100, blank=True, null=True, unique=True)

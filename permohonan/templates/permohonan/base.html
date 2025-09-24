@@ -23,16 +23,16 @@
                             Selamat datang, <strong>{{ user.username }}</strong>!
                         </span>
                         
-                        {% if user.is_superuser or user|has_group:"Jawatankuasa" or user|has_group:"PICPrivileging" %}
+                        {% if user.is_superuser or user|has_group:"Pengarah" or user|has_group:"PICPrivileging" %}
                             <a href="{% url 'laporan_permohonan' %}" class="btn btn-sm btn-light me-2">Laporan</a>
                         {% endif %}
                         
-                        {% if user|has_group:"Jawatankuasa" %}
-                            <a href="{% url 'jawatankuasa_dashboard' %}" class="btn btn-sm btn-info">JK Dashboard</a>
+                        {% if user|has_group:"Pengarah" %}
+                            <a href="{% url 'pengarah_dashboard' %}" class="btn btn-sm btn-info">Dashboard Pengarah</a>
                         {% elif user|has_group:"KetuaJabatan" %}
-                            <a href="{% url 'hod_dashboard' %}" class="btn btn-sm btn-warning">HOD Dashboard</a>
+                            <a href="{% url 'hod_dashboard' %}" class="btn btn-sm btn-warning">Dashboard KJ</a>
                         {% elif user|has_group:"PICPrivileging" %}
-                            <a href="{% url 'pic_dashboard' %}" class="btn btn-sm btn-light">PIC Dashboard</a>
+                            <a href="{% url 'pic_dashboard' %}" class="btn btn-sm btn-light">Dashboard PIC</a>
                         {% else %}
                             <a href="{% url 'dashboard' %}" class="btn btn-sm btn-secondary">Dashboard Saya</a>
                         {% endif %}

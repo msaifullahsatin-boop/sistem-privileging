@@ -1,6 +1,6 @@
 {% extends 'permohonan/base.html' %}
 {% load crispy_forms_tags %}
-{% load static %} {# Pastikan 'static' dimuatkan di atas #}
+{% load static %}
 
 {% block content %}
     <div class="row">
@@ -8,7 +8,6 @@
             <h3>Profil Anda</h3>
             <hr>
             <div class="card text-center">
-                
                 {% if user.userprofile.gambar_profil %}
                     <img src="{{ user.userprofile.gambar_profil.url }}" class="card-img-top rounded-circle p-3" alt="Gambar Profil">
                 {% else %}
@@ -43,17 +42,10 @@
                         </div>
                         <div class="card-body">
                              <p class="card-text">
-                                <strong>Nama Penuh:</strong> {{ permohonan.nama_pemohon }} <br>
-                                <strong>No. K/P:</strong> {{ permohonan.no_kp }} <br>
-                                <strong>Jawatan/Gred:</strong> {{ permohonan.jawatan_gred }} <br>
-                                <strong>Jabatan:</strong> {{ permohonan.jabatan }}
-                            </p>
-                            <hr>
-                            <p class="card-text">
-                                <strong>Status Sokongan KJ:</strong> 
+                                <strong>Status Sokongan Ketua Jabatan:</strong> 
                                 {% if permohonan.status_sokongan_kj == 'Menyokong' %}<span class="badge bg-success">{{ permohonan.get_status_sokongan_kj_display }}</span>{% elif permohonan.status_sokongan_kj == 'Tidak Menyokong' %}<span class="badge bg-danger">{{ permohonan.get_status_sokongan_kj_display }}</span>{% else %}<span class="badge bg-warning text-dark">{{ permohonan.get_status_sokongan_kj_display }}</span>{% endif %}
                                 <br>
-                                <strong>Keputusan Jawatankuasa:</strong> 
+                                <strong>Keputusan Pengarah:</strong> 
                                 {% if permohonan.keputusan_jawatanankuasa == 'Ya' %}<span class="badge bg-success">{{ permohonan.get_keputusan_jawatanankuasa_display }}</span>{% elif permohonan.keputusan_jawatanankuasa == 'Tidak' %}<span class="badge bg-danger">{{ permohonan.get_keputusan_jawatanankuasa_display }}</span>{% else %}<span class="badge bg-warning text-dark">{{ permohonan.get_keputusan_jawatanankuasa_display }}</span>{% endif %}
                             </p>
                             {% if permohonan.keputusan_jawatanankuasa == 'Ya' and permohonan.tarikh_sah_sehingga %}
