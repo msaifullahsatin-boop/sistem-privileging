@@ -280,9 +280,20 @@ def jana_sijil_pdf(request, pk):
     
     if (not is_owner and not is_admin_role) or permohonan.keputusan_jawatanankuasa != 'Ya':
         return redirect('dashboard')
+    
+    # Kira jumlah prosedur
+    jumlah_prosedur = (
+        permohonan.core_procedures.count() +
+        permohonan.specialised_procedures.count() +
+        permohonan.addition_procedures.count()
+    )
         
-    context = {'permohonan': permohonan}
+    context = {
+        'permohonan': permohonan,
+        'jumlah_prosedur': jumlah_prosedur,
+    }
     pdf = render_to_pdf('permohonan/sijil_template.html', context)
+    
     if pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
         filename = f"Sijil_Privileging_{permohonan.nama_pemohon}.pdf"

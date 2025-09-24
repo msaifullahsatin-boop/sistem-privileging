@@ -1,70 +1,131 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Sijil Privileging</title>
+    <title>Sijil Privileging - {{ permohonan.nama_pemohon }}</title>
     <style>
         @page {
             size: a4 portrait;
-            margin: 2cm;
+            margin: 1.5cm;
         }
         body {
             font-family: 'Times New Roman', serif;
-            font-size: 12pt;
+            color: #333;
         }
-        .container {
+        .sijil-container {
+            border-style: double;
+            border-width: 8px;
+            border-color: #003399 #cc0000; /* Biru dan Merah */
+            background-color: #FFFFEE; /* Kuning Lembut */
+            position: relative;
             text-align: center;
-            border: 5px double black;
             padding: 20px;
-            height: 23cm;
+            box-sizing: border-box;
+            height: 25.7cm; /* Laraskan ketinggian untuk A4 */
         }
-        h1 {
-            font-size: 28pt;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-        h2 {
-            font-size: 18pt;
-            margin-bottom: 40px;
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.1;
+            width: 450px; /* Ditukar dari % kepada px */
+            z-index: 1;
         }
         .content {
-            text-align: center;
-            font-size: 14pt;
-            line-height: 1.5;
+            position: relative;
+            z-index: 2;
         }
-        .footer {
-            position: running(footer);
-            text-align: left;
-            margin-top: 50px;
+        .lampiran {
+            page-break-before: always;
+            padding-top: 1cm;
         }
-        .signature {
-            margin-top: 80px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
             text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Sijil Penganugerahan<br>Kebenaran Menjalankan Prosedur Klinikal</h1>
-        <h2>Dengan ini disahkan bahawa</h2>
-        
+    <div class="sijil-container">
+        <img src="{% static 'permohonan/images/logo_hwkks.png' %}" class="watermark" alt="Watermark Logo">
         <div class="content">
-            <p style="font-size: 20pt; font-weight: bold;">{{ permohonan.nama_pemohon }}</p>
-            <p><strong>({{ permohonan.jawatan_gred.nama }})</strong></p>
-            <p>telah dianugerahkan kebenaran menjalankan prosedur klinikal<br>
-            di <strong>{{ permohonan.jabatan.nama }}, Hospital Wanita dan Kanak-Kanak Sabah</strong>.</p>
+            <img src="{% static 'permohonan/images/jata_negara.png' %}" style="height: 100px;" alt="Jata Negara">
             
-            <p><strong>No. Siri Sijil:</strong> {{ permohonan.no_siri_sijil }}</p>
-            <p><strong>Tarikh Dikeluarkan:</strong> {{ permohonan.tarikh_keputusan|date:"d F Y" }}</p>
-            <p><strong>Sah Sehingga:</strong> {{ permohonan.tarikh_sah_sehingga|date:"d F Y" }}</p>
-        </div>
+            <h1 style="font-size: 24pt; margin-top: 20px;">SIJIL PENGANUGERAHAN<br>KEBENARAN MENJALANKAN PROSEDUR KLINIKAL</h1>
+            
+            <p style="margin-top: 40px; font-size: 14pt;">Dengan ini disahkan bahawa</p>
+            
+            <p style="font-size: 22pt; font-weight: bold; margin: 20px 0;">{{ permohonan.nama_pemohon|upper }}</p>
+            <p style="font-size: 14pt;">({{ permohonan.no_kp }})</p>
+            <p style="font-size: 14pt;">{{ permohonan.jabatan.nama }}</p>
+            
+            <p style="margin-top: 30px; font-size: 14pt;">
+                Diberi kebenaran untuk menjalankan sebanyak <strong>{{ jumlah_prosedur }}</strong> prosedur.<br>
+                <em>(Sila lihat lampiran)</em>
+            </p>
+            
+            <p style="margin-top: 30px; font-size: 12pt;">
+                <strong>No. Siri Sijil:</strong> {{ permohonan.no_siri_sijil }}
+            </p>
+            
+            <table style="width: 450px; margin: 20px auto; text-align: center; border: none;">
+                <tr style="border: none;"><td style="border: none;">
+                    <p style="font-size: 14pt; margin-bottom: 0;"><strong>Tarikh Dikeluarkan</strong></p>
+                    <p style="font-size: 12pt;">{{ permohonan.tarikh_keputusan|date:"d F Y" }}</p>
+                </td><td style="border: none;">
+                    <p style="font-size: 14pt; margin-bottom: 0;"><strong>Sah Sehingga</strong></p>
+                    <p style="font-size: 12pt;">{{ permohonan.tarikh_sah_sehingga|date:"d F Y" }}</p>
+                </td></tr>
+            </table>
 
-        <div class="signature">
-            <p>....................................................</p>
-            <p><strong>(Tandatangan Pengarah)</strong></p>
-            <p>Pengarah</p>
-            <p>Hospital Wanita dan Kanak-Kanak Sabah</p>
+            <div style="margin-top: 50px; text-align: left; width: 350px;">
+                <img src="{% static 'permohonan/images/tandatangan_pengarah.png' %}" style="height: 60px;" alt="Tandatangan">
+                <p style="border-top: 1px solid #333; padding-top: 5px; margin-top: 5px;">
+                    <strong>(NAMA PENGARAH)</strong><br>
+                    Pengerusi,<br>
+                    Jawatankuasa Privileging Hospital<br>
+                    Hospital Wanita & Kanak-Kanak Sabah.
+                </p>
+            </div>
         </div>
+    </div>
+
+    <div class="lampiran">
+        <h3>LAMPIRAN SENARAI PROSEDUR</h3>
+        <p><strong>Nama:</strong> {{ permohonan.nama_pemohon }}</p>
+        <p><strong>No. Siri Sijil:</strong> {{ permohonan.no_siri_sijil }}</p>
+
+        {% if permohonan.core_procedures.all %}
+            <h4>Core Procedures</h4>
+            <table><tr><th>Nama Prosedur</th></tr>
+            {% for item in permohonan.core_procedures.all %}<tr><td>{{ item.prosedur.nama }}</td></tr>{% endfor %}
+            </table>
+        {% endif %}
+        
+        {% if permohonan.specialised_procedures.all %}
+            <h4 style="margin-top: 20px;">Specialised Procedures</h4>
+            <table><tr><th>Nama Prosedur</th></tr>
+            {% for item in permohonan.specialised_procedures.all %}<tr><td>{{ item.prosedur.nama }}</td></tr>{% endfor %}
+            </table>
+        {% endif %}
+
+        {% if permohonan.addition_procedures.all %}
+            <h4 style="margin-top: 20px;">Addition Procedures</h4>
+            <table><tr><th>Nama Prosedur</th><th>Jenis</th></tr>
+            {% for item in permohonan.addition_procedures.all %}<tr><td>{{ item.prosedur.nama }}</td><td>{{ item.get_jenis_display }}</td></tr>{% endfor %}
+            </table>
+        {% endif %}
     </div>
 </body>
 </html>
