@@ -7,11 +7,14 @@ from django import forms
 from datetime import date
 from django.http import HttpResponse
 import pandas as pd
+from django.conf import settings
+import os
 from .utils import render_to_pdf 
+from django.template import Template, Context
 
 from .models import (
     Permohonan, Kelayakan, UserProfile, SiteSettings, Jabatan, Gred, Jawatan,
-    ProsedurPilihan, CoreProcedure, SpecialisedProcedure, AdditionProcedure, ReductionProcedure
+    ProsedurPilihan, CoreProcedure, SpecialisedProcedure, AdditionProcedure, ReductionProcedure, SijilTemplate
 )
 from .forms import BorangPermohonan, BorangSokonganKetuaJabatan, BorangKeputusanPengarah, UserProfileForm, KelayakanForm
 
@@ -153,11 +156,13 @@ def papar_borang(request):
         
     context = {
         'form_utama': form_utama,
-        'kelayakan_formset': kelayakan_formset,
-        'core_formset': core_formset,
-        'specialised_formset': specialised_formset,
-        'addition_formset': addition_formset,
-        'reduction_formset': reduction_formset,
+        'formset_data': [
+            (kelayakan_formset, 'BAHAGIAN II: KELAYAKAN (Ijazah, Master dll.)'),
+            (core_formset, 'BAHAGIAN III: SENARAI PROSEDUR YANG DIPOHON - Core Procedures'),
+            (specialised_formset, 'Specialised Procedures'),
+            (addition_formset, 'Addition Procedures'),
+            (reduction_formset, 'Reduction Procedures'),
+        ]
     }
     return render(request, 'permohonan/borang.html', context)
 
@@ -198,11 +203,13 @@ def kemaskini_permohonan(request, pk):
         
     context = {
         'form_utama': form_utama,
-        'kelayakan_formset': kelayakan_formset,
-        'core_formset': core_formset,
-        'specialised_formset': specialised_formset,
-        'addition_formset': addition_formset,
-        'reduction_formset': reduction_formset,
+        'formset_data': [
+            (kelayakan_formset, 'BAHAGIAN II: KELAYAKAN (Ijazah, Master dll.)'),
+            (core_formset, 'BAHAGIAN III: SENARAI PROSEDUR YANG DIPOHON - Core Procedures'),
+            (specialised_formset, 'Specialised Procedures'),
+            (addition_formset, 'Addition Procedures'),
+            (reduction_formset, 'Reduction Procedures'),
+        ]
     }
     return render(request, 'permohonan/borang.html', context)
 
@@ -281,6 +288,11 @@ def jana_sijil_pdf(request, pk):
     if (not is_owner and not is_admin_role) or permohonan.keputusan_jawatanankuasa != 'Ya':
         return redirect('dashboard')
     
+    try:
+        template_obj = SijilTemplate.objects.get(is_active=True)
+    except SijilTemplate.DoesNotExist:
+        return HttpResponse("Ralat: Tiada templat sijil yang aktif ditemui. Sila aktifkan satu templat di laman admin.", status=400)
+
     # Kira jumlah prosedur
     jumlah_prosedur = (
         permohonan.core_procedures.count() +
@@ -288,19 +300,52 @@ def jana_sijil_pdf(request, pk):
         permohonan.addition_procedures.count()
     )
         
-    context = {
+    context_data = {
         'permohonan': permohonan,
         'jumlah_prosedur': jumlah_prosedur,
+        'STATIC_URL': settings.STATIC_URL,
     }
-    pdf = render_to_pdf('permohonan/sijil_template.html', context)
     
-    if pdf:
-        response = HttpResponse(pdf, content_type='application/pdf')
+    # Render the template from the database
+    template = Template(template_obj.html_content)
+    context = Context(context_data)
+    html_string = template.render(context)
+    
+    # Let's try a direct approach with pisa
+    from io import BytesIO
+    from xhtml2pdf import pisa
+    result = BytesIO()
+    
+    # The link_callback needs to resolve static file paths
+    def link_callback(uri, rel):
+        # use settings.BASE_DIR to find files
+        static_root = settings.STATIC_ROOT
+        static_url = settings.STATIC_URL
+
+        if uri.startswith(static_url):
+            path = os.path.join(static_root, uri.replace(static_url, ""))
+        else:
+            # handle relative paths
+            path = os.path.join(settings.BASE_DIR, uri)
+
+        # check if file exists
+        if not os.path.isfile(path):
+            return uri
+        return path
+
+    pdf = pisa.CreatePDF(
+            BytesIO(html_string.encode("UTF-8")), 
+            dest=result,
+            link_callback=link_callback)
+    
+    if not pdf.err:
+        response = HttpResponse(result.getvalue(), content_type='application/pdf')
         filename = f"Sijil_Privileging_{permohonan.nama_pemohon}.pdf"
         content = f"attachment; filename={filename}"
         response['Content-Disposition'] = content
         return response
-    return HttpResponse("Tidak dapat menjana PDF.", status=400)
+        
+    return HttpResponse(f"Tidak dapat menjana PDF. Ralat: {pdf.err}", status=400)
 
 @login_required
 def laporan_export_excel(request):

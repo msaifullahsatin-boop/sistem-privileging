@@ -14,97 +14,122 @@
             </div>
         </div>
 
+        {% for formset, title in formset_data %}
         <div class="card mb-4">
-            <div class="card-header fw-bold">BAHAGIAN II: KELAYAKAN (Ijazah, Master dll.)</div>
+            <div class="card-header fw-bold">{{ title }}</div>
             <div class="card-body">
-                <div id="kelayakan-formset">
-                    {{ kelayakan_formset.management_form }}
-                    {% for form in kelayakan_formset %}
-                        <div class="dynamic-form border-bottom pb-3 mb-3">
-                            {{ form|crispy }}
+                <div class="formset-container" data-prefix="{{ formset.prefix }}">
+                    {{ formset.management_form }}
+                    {% for form in formset.forms %}
+                        <div class="dynamic-form">
+                            <div class="row">
+                                <div class="col">
+                                    {{ form|crispy }}
+                                </div>
+                                {% if formset.can_delete %}
+                                <div class="col-auto align-self-center">
+                                    <button type="button" class="btn btn-danger btn-sm delete-row">Buang</button>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <hr>
                         </div>
                     {% endfor %}
+                    
+                    <div class="empty-form" style="display:none;">
+                        <div class="row">
+                            <div class="col">
+                                {{ formset.empty_form|crispy }}
+                            </div>
+                            {% if formset.can_delete %}
+                            <div class="col-auto align-self-center">
+                                <button type="button" class="btn btn-danger btn-sm delete-row">Buang</button>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <hr>
+                    </div>
+                    
+                    <button type="button" class="btn btn-success btn-sm add-row">Tambah</button>
                 </div>
             </div>
         </div>
-
-        <div class="card mb-4">
-            <div class="card-header fw-bold">BAHAGIAN III: SENARAI PROSEDUR YANG DIPOHON</div>
-            <div class="card-body">
-                <h5 class="mt-3">Core Procedures</h5>
-                <div id="core-formset">
-                    {{ core_formset.management_form }}
-                    {% for form in core_formset %}<div class="dynamic-form">{{ form|crispy }}</div>{% endfor %}
-                </div>
-                <hr>
-
-                <h5 class="mt-4">Specialised Procedures</h5>
-                <div id="specialised-formset">
-                    {{ specialised_formset.management_form }}
-                    {% for form in specialised_formset %}<div class="dynamic-form">{{ form|crispy }}</div>{% endfor %}
-                </div>
-                <hr>
-                
-                <h5 class="mt-4">Addition Procedures</h5>
-                <p class="text-muted small">Abaikan jika tidak berkaitan.</p>
-                <div id="addition-formset">
-                    {{ addition_formset.management_form }}
-                    {% for form in addition_formset %}<div class="dynamic-form">{{ form|crispy }}</div>{% endfor %}
-                </div>
-                <hr>
-                
-                <h5 class="mt-4">Reduction Procedures</h5>
-                <p class="text-muted small">Abaikan jika tidak berkaitan.</p>
-                <div id="reduction-formset">
-                    {{ reduction_formset.management_form }}
-                    {% for form in reduction_formset %}<div class="dynamic-form">{{ form|crispy }}</div>{% endfor %}
-                </div>
-            </div>
-        </div>
+        {% endfor %}
         
-        <button type="submit" class="btn btn-primary btn-lg">Hantar Permohonan kepada Ketua Jabatan</button>
+        <button type="submit" class="btn btn-primary btn-lg">Hantar Permohonan</button>
     </form>
 {% endblock %}
-
 
 {% block extra_js %}
 <script type="text/javascript">
 $(document).ready(function() {
-    // Fungsi plugin formset
-    function initializeFormset(selector, prefix, addText) {
-        $(selector).formset({
-            prefix: prefix,
-            addText: addText,
-            deleteText: 'Buang',
-            addCssClass: 'btn btn-success btn-sm mt-2 add-row',
-            deleteCssClass: 'btn btn-danger btn-sm mt-2 delete-row'
+    $('.formset-container').each(function() {
+        var container = $(this);
+        var prefix = container.data('prefix');
+        var totalFormsInput = $('#id_' + prefix + '-TOTAL_FORMS');
+
+        // --- ADD ROW ---
+        container.on('click', '.add-row', function() {
+            var formIdx = parseInt(totalFormsInput.val());
+            
+            // Get the empty form's HTML content
+            var emptyFormHtml = container.find('.empty-form').html();
+            
+            // Replace the __prefix__ placeholder with the new form index
+            var newFormHtml = emptyFormHtml.replace(/__prefix__/g, formIdx);
+            
+            // Create a new div to hold the form and add the dynamic-form class
+            var newForm = $('<div class="dynamic-form"></div>').html(newFormHtml);
+            
+            // Insert the new form before the "Add" button
+            $(this).before(newForm);
+            
+            // Increment the total forms count
+            totalFormsInput.val(formIdx + 1);
+
+            // Hide the "Delete" checkbox for the newly added form
+            newForm.find('input[type="checkbox"][id$="-DELETE"]').closest('.mb-3').hide();
         });
-    }
 
-    // Laksanakan untuk setiap formset
-    initializeFormset('#kelayakan-formset .dynamic-form', '{{ kelayakan_formset.prefix }}', 'Tambah Kelayakan');
-    initializeFormset('#core-formset .dynamic-form', '{{ core_formset.prefix }}', 'Tambah Core Procedure');
-    initializeFormset('#specialised-formset .dynamic-form', '{{ specialised_formset.prefix }}', 'Tambah Specialised Procedure');
-    initializeFormset('#addition-formset .dynamic-form', '{{ addition_formset.prefix }}', 'Tambah Addition Procedure');
-    initializeFormset('#reduction-formset .dynamic-form', '{{ reduction_formset.prefix }}', 'Tambah Reduction Procedure');
-    
-    // Skrip untuk Kategori Bersarang
-    const kategoriUtama = $('#id_kategori_utama');
-    const kategoriBawahanDiv = $('#div_id_kategori_bawahan');
-    const jawatanLainDiv = $('#div_id_jawatan_lain');
+        // --- DELETE ROW ---
+        container.on('click', '.delete-row', function() {
+            var formRow = $(this).closest('.dynamic-form');
+            var deleteInput = formRow.find('input[id$="-DELETE"]');
 
-    function toggleKategoriFields() {
-        const selectedUtama = kategoriUtama.val();
-        kategoriBawahanDiv.hide();
-        jawatanLainDiv.hide();
-        if (['Pakar Perubatan / Pergigian', 'Jururawat', 'Penolong Pegawai Perubatan', 'Juruterapi Pergigian', 'Anggota Kesihatan Bersekutu', 'Pegawai Farmasi', 'Penolong Pegawai Farmasi'].includes(selectedUtama)) {
-            kategoriBawahanDiv.show();
-        } else if (selectedUtama === 'Lain-lain') {
-            jawatanLainDiv.show();
-        }
-    }
-    toggleKategoriFields();
-    kategoriUtama.change(toggleKategoriFields);
+            if (deleteInput.length && deleteInput.attr('id').indexOf('__prefix__') === -1) {
+                // This is an existing form (not a template), so mark it for deletion
+                deleteInput.prop('checked', true);
+                formRow.hide();
+            } else {
+                // This is a new form that hasn't been saved, so just remove it from the DOM
+                formRow.remove();
+                
+                // After removing a new form, we need to re-index the remaining new forms
+                var totalForms = parseInt(totalFormsInput.val());
+                totalFormsInput.val(totalForms - 1);
+                
+                var forms = container.find('.dynamic-form');
+                for (var i = 0; i < forms.length; i++) {
+                    var form = forms.eq(i);
+                    form.find(':input, label').each(function() {
+                        var el = $(this);
+                        ['id', 'name', 'for'].forEach(function(attr) {
+                            var val = el.attr(attr);
+                            if (val) {
+                                var new_val = val.replace(new RegExp(prefix + '-\\d+-'), prefix + '-' + i + '-');
+                                el.attr(attr, new_val);
+                            }
+                        });
+                    });
+                }
+            }
+        });
+
+        // Hide the "Delete" checkbox and its label for a cleaner UI on initial page load
+        container.find('.dynamic-form').each(function() {
+            $(this).find('input[type="checkbox"][id$="-DELETE"]').closest('.mb-3').hide();
+        });
+    });
 });
 </script>
 {% endblock %}

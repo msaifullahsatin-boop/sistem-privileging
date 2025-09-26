@@ -3,8 +3,8 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from .models import (
     Permohonan, Kelayakan, Jawatan, Gred, Jabatan, 
-    ProsedurPilihan, UserProfile, SiteSettings,
-    CoreProcedure, SpecialisedProcedure, AdditionProcedure, ReductionProcedure
+    ProsedurPilihan, UserProfile, SiteSettings, SijilTemplate,
+    CoreProcedure, SpecialisedProcedure, AdditionProcedure, ReductionProcedure, SubKategori
 )
 
 class UserProfileInline(admin.StackedInline):
@@ -39,6 +39,22 @@ class ProsedurPilihanAdmin(admin.ModelAdmin):
     list_display = ('nama',)
     search_fields = ['nama']
 
+@admin.register(SijilTemplate)
+class SijilTemplateAdmin(admin.ModelAdmin):
+    list_display = ('nama', 'is_active', 'tarikh_dicipta')
+    list_filter = ('is_active',)
+    actions = ['activate_template']
+
+    def activate_template(self, request, queryset):
+        if queryset.count() == 1:
+            template = queryset.first()
+            template.is_active = True
+            template.save()
+            self.message_user(request, f"Templat '{template.nama}' telah diaktifkan.")
+        else:
+            self.message_user(request, "Sila pilih satu templat sahaja untuk diaktifkan.", level='error')
+    activate_template.short_description = "Aktifkan templat yang dipilih"
+
 admin.site.register(Permohonan, PermohonanAdmin)
 admin.site.register(Kelayakan)
 admin.site.register(Jawatan, JawatanAdmin)
@@ -47,6 +63,7 @@ admin.site.register(Jabatan, JabatanAdmin)
 admin.site.register(ProsedurPilihan, ProsedurPilihanAdmin)
 admin.site.register(UserProfile)
 admin.site.register(SiteSettings)
+admin.site.register(SubKategori)
 
 # Daftarkan model-model prosedur baru
 admin.site.register(CoreProcedure)

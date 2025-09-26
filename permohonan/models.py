@@ -38,6 +38,16 @@ class ProsedurPilihan(models.Model):
     def __str__(self):
         return self.nama
 
+class SubKategori(models.Model):
+    nama = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nama
+
+    class Meta:
+        verbose_name = "Sub-Kategori Pemohon"
+        verbose_name_plural = "Sub-Kategori Pemohon"
+
 class Permohonan(models.Model):
     KATEGORI_UTAMA_CHOICES = [('', '---------'), ('Pakar Perubatan / Pergigian', 'Pakar Perubatan / Pergigian'), ('Pegawai Perubatan', 'Pegawai Perubatan'), ('Jururawat', 'Jururawat'), ('Penolong Pegawai Perubatan', 'Penolong Pegawai Perubatan'), ('Juruterapi Pergigian', 'Juruterapi Pergigian'), ('Anggota Kesihatan Bersekutu', 'Anggota Kesihatan Bersekutu'), ('Pegawai Farmasi', 'Pegawai Farmasi'), ('Penolong Pegawai Farmasi', 'Penolong Pegawai Farmasi'), ('Lain-lain', 'Lain-lain')]
     KATEGORI_BAWAHAN_CHOICES = [('', '---------'), ('Pakar HWKKS', 'Pakar HWKKS'), ('Pakar KKM Lain', 'Pakar KKM dari Hospital lain selain HWKKS'), ('Pakar Bukan KKM', 'Pakar daripada institusi selain KKM'), ('Lantikan Baru', 'Lantikan baru/ bertukar masuk'), ('Ada Credentialing', 'Ada Credentialing'), ('Ada Post Basic', 'Ada Post Basic')]
@@ -55,7 +65,8 @@ class Permohonan(models.Model):
     no_sijil_amalan = models.CharField("No. Sijil Amalan Tahunan", max_length=100, blank=True, null=True)
     jenis_permohonan = models.CharField(max_length=50, choices=JENIS_PERMOHONAN_CHOICES, null=True)
     kategori_utama = models.CharField("Kategori Pemohon Utama", max_length=100, choices=KATEGORI_UTAMA_CHOICES, null=True)
-    kategori_bawahan = models.CharField("Sub-Kategori Pemohon", max_length=100, choices=KATEGORI_BAWAHAN_CHOICES, blank=True, null=True)
+    kategori_bawahan = models.CharField("Sub-Kategori Pemohon (Lama)", max_length=100, choices=KATEGORI_BAWAHAN_CHOICES, blank=True, null=True, editable=False)
+    sub_kategori = models.ManyToManyField(SubKategori, verbose_name="Sub-Kategori Pemohon", blank=True)
     jawatan_lain = models.CharField("Jawatan Lain-lain (jika berkenaan)", max_length=100, blank=True, null=True)
     tarikh_borang_dihantar = models.DateField(auto_now_add=True)
     
@@ -108,3 +119,22 @@ class ReductionProcedure(models.Model):
     nama_prosedur = models.CharField(max_length=255)
     def __str__(self):
         return self.nama_prosedur
+
+class SijilTemplate(models.Model):
+    nama = models.CharField(max_length=100, help_text="Nama untuk templat ini (cth: 'Templat Rasmi 2024')")
+    html_content = models.TextField(help_text="Kod HTML penuh untuk templat sijil.")
+    is_active = models.BooleanField(default=False, help_text="Tandakan jika ini adalah templat yang sedang digunakan. Hanya satu templat boleh aktif pada satu masa.")
+    tarikh_dicipta = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.nama
+
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            # Pastikan hanya satu templat yang aktif
+            SijilTemplate.objects.filter(is_active=True).update(is_active=False)
+        super(SijilTemplate, self).save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "Templat Sijil"
+        verbose_name_plural = "Templat Sijil"

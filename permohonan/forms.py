@@ -21,10 +21,11 @@ class BorangPermohonan(forms.ModelForm):
         fields = [
             'nama_pemohon', 'no_kp', 'jawatan', 'gred', 'jabatan', 
             'tarikh_mula_bertugas', 'no_sijil_amalan', 'jenis_permohonan', 
-            'kategori_utama', 'kategori_bawahan', 'jawatan_lain',
+            'kategori_utama', 'sub_kategori', 'jawatan_lain',
         ]
         widgets = {
             'tarikh_mula_bertugas': forms.DateInput(attrs={'type': 'date'}),
+            'sub_kategori': forms.CheckboxSelectMultiple,
         }
         help_texts = {
             'no_sijil_amalan': 'Abaikan jika tidak berkenaan.',
